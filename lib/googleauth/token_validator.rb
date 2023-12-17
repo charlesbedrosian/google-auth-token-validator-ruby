@@ -5,6 +5,18 @@ require "openssl"
 
 module Google
   module Auth
+
+    class TokenValidationResult
+      attr_reader :success, :email, :domain
+
+      def initialize(success, domain = nil, email = nil)
+        @success = success
+        @email = email
+        @domain = domain
+      end
+
+    end
+
     class TokenValidator
       GOOGLE_SIGNON_CERTS_URL    = "https://www.googleapis.com/oauth2/v1/certs".freeze
       ISSUERS                    = %w(accounts.google.com https://accounts.google.com).freeze
@@ -71,7 +83,11 @@ module Google
           fail Error, "Wrong recipient - payload audience doesn't match required audience"
         end
 
-        return true
+        return TokenValidationResult.new(
+          true,
+          @payload['hd'],
+          @payload['email']
+        )
       end
 
       class << self
